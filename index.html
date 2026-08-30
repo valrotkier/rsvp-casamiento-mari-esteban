@@ -11,7 +11,7 @@
         if (localStorage.getItem('tema') === 'dark') {
           document.documentElement.setAttribute('data-theme', 'dark');
         }
-      } catch (e) {}
+      } catch (e) { }
     })();
   </script>
   <style>
@@ -706,7 +706,7 @@
 
     function aplicarTema(t) {
       document.documentElement.setAttribute('data-theme', t);
-      try { localStorage.setItem('tema', t); } catch (e) {}
+      try { localStorage.setItem('tema', t); } catch (e) { }
       const btnTema = document.getElementById('btn-tema');
       if (btnTema) btnTema.textContent = t === 'dark' ? '☀️' : '🌙';
     }
@@ -716,7 +716,7 @@
     }
     (function () {
       let guardado = null;
-      try { guardado = localStorage.getItem('tema'); } catch (e) {}
+      try { guardado = localStorage.getItem('tema'); } catch (e) { }
       aplicarTema(guardado === 'dark' ? 'dark' : 'light');
       document.getElementById('btn-tema').onclick = toggleTema;
     })();
@@ -739,7 +739,7 @@
 
     function encabezadoHTML() {
       return `
-    <a class="volver-sitio" href="${esc(EVENTO.linkSitio)}">‹ Sitio del evento</a>
+    <a class="volver-sitio" href="https://giant-weta-bz0zb8.my.canva.site/mari-esteban">‹ Sitio del evento</a>
     <div class="encabezado">
       <h1 class="novios">${esc(EVENTO.novios)}</h1>
       <p class="evento-lugar">${esc(EVENTO.lugar)}</p>
