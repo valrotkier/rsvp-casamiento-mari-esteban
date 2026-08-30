@@ -159,6 +159,9 @@
   }
   tbody tr:last-child td{border-bottom:none}
   tbody tr.fila-sombra{background:var(--surface-2)}
+  tbody tr.fila-asiste{background:var(--good-soft)}
+  tbody tr.fila-no-asiste{background:var(--bad-soft)}
+  tbody tr.fila-pendiente{background:var(--pending-soft)}
   tbody tr:hover{background:var(--accent-soft)}
   td.texto-largo{max-width:220px;color:var(--muted)}
   td .vacio{color:var(--muted);opacity:.5}
@@ -184,6 +187,23 @@
   .chip.si{background:var(--good-soft);color:var(--good)}
   .chip.no{background:var(--bad-soft);color:var(--bad)}
   .chip.pend{background:var(--pending-soft);color:var(--pending)}
+
+  .btn-mini{
+    font-family:inherit;cursor:pointer;border-radius:7px;font-size:12px;font-weight:600;
+    padding:5px 9px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);
+    display:inline-flex;align-items:center;gap:4px;transition:border-color .15s;white-space:nowrap;
+  }
+  .btn-mini:hover{border-color:var(--accent)}
+  .btn-mini.primario{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .btn-mini.primario:hover{filter:brightness(1.08)}
+  .celda-acciones{display:flex;gap:6px;flex-wrap:wrap}
+  .input-fila,.select-fila{
+    font-family:inherit;font-size:13px;color:var(--ink);background:var(--bg);
+    border:1.5px solid var(--line);border-radius:6px;padding:5px 7px;width:100%;box-sizing:border-box;
+  }
+  .input-fila:focus,.select-fila:focus{outline:none;border-color:var(--accent)}
+  textarea.input-fila{resize:vertical;min-height:36px;font-family:inherit}
+  tr.fila-editando{background:var(--accent-soft) !important}
 
   .estado-carga,.estado-vacio,.estado-error{
     text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;
@@ -256,6 +276,7 @@ let filas = [];
 let gruposIndex = new Map(); // group_id -> número de grupo estable (orden de llegada)
 let orden = { campo: 'grupo', asc: true };
 let busqueda = '';
+let filaEditando = null; // id del invitado que se está editando desde el panel
 
 function calcularGrupos(){
   const primeraFecha = new Map();
@@ -345,6 +366,7 @@ function renderTodo(){
             ${th('song_request','Canción')}
             ${th('message_to_couple','Mensaje')}
             ${th('responded_at','Respondió')}
+            <th>Acciones</th>
           </tr></thead>
           <tbody id="tbody"></tbody>
         </table>
@@ -405,11 +427,45 @@ function renderTabla(){
   let html = '';
   let grupoAnterior = null;
   let sombra = false;
+  const sombreadoActivo = orden.campo === 'grupo'; // el sombreado por grupo solo tiene sentido si las filas de un mismo grupo quedan juntas
   for(const f of vistas){
-    if(f.group_id !== grupoAnterior){ sombra = !sombra; grupoAnterior = f.group_id; }
+    if(sombreadoActivo && f.group_id !== grupoAnterior){ sombra = !sombra; grupoAnterior = f.group_id; }
     const numGrupo = gruposIndex.get(f.group_id) || '?';
-    html += `
-    <tr class="${sombra ? 'fila-sombra' : ''}">
+    const claseFila = sombreadoActivo
+      ? (sombra ? 'fila-sombra' : '')
+      : (f.attending === true ? 'fila-asiste' : f.attending === false ? 'fila-no-asiste' : 'fila-pendiente');
+    if(f.id === filaEditando){
+      html += `
+    <tr class="fila-editando">
+      <td>
+        <div class="celda-invitado">
+          <span class="grupo-num" title="Grupo ${numGrupo}">${numGrupo}</span>
+          <input class="input-fila" id="ed-nombre-${f.id}" type="text" value="${esc(f.display_name||'')}">
+        </div>
+      </td>
+      <td>${esc(f.rsvp_groups?.first_name||'')} ${esc(f.rsvp_groups?.last_name||'')}</td>
+      <td>
+        <select class="select-fila" id="ed-asistencia-${f.id}">
+          <option value="pendiente" ${f.attending===null?'selected':''}>⏱ Pendiente</option>
+          <option value="si" ${f.attending===true?'selected':''}>✓ Asiste</option>
+          <option value="no" ${f.attending===false?'selected':''}>✕ No asiste</option>
+        </select>
+      </td>
+      <td class="texto-largo"><input class="input-fila" id="ed-dieta-${f.id}" type="text" value="${esc(f.dietary_restrictions||'')}"></td>
+      <td class="texto-largo"><input class="input-fila" id="ed-cancion-${f.id}" type="text" value="${esc(f.song_request||'')}"></td>
+      <td class="texto-largo"><textarea class="input-fila" id="ed-mensaje-${f.id}">${esc(f.message_to_couple||'')}</textarea></td>
+      <td>${f.responded_at ? fmtFecha(f.responded_at) : '<span class="vacio">—</span>'}</td>
+      <td>
+        <div class="celda-acciones">
+          <button class="btn-mini primario" data-guardar="${f.id}">Guardar</button>
+          <button class="btn-mini" data-cancelar="${f.id}">Cancelar</button>
+        </div>
+      </td>
+    </tr>
+  `;
+    } else {
+      html += `
+    <tr class="${claseFila}">
       <td>
         <div class="celda-invitado">
           <span class="grupo-num" title="Grupo ${numGrupo}">${numGrupo}</span>
@@ -422,10 +478,46 @@ function renderTabla(){
       <td class="texto-largo">${f.song_request ? esc(f.song_request) : '<span class="vacio">—</span>'}</td>
       <td class="texto-largo">${f.message_to_couple ? esc(f.message_to_couple) : '<span class="vacio">—</span>'}</td>
       <td>${f.responded_at ? fmtFecha(f.responded_at) : '<span class="vacio">—</span>'}</td>
+      <td><button class="btn-mini" data-editar="${f.id}">✎ Editar</button></td>
     </tr>
   `;
+    }
   }
   $tbody.innerHTML = html;
+
+  $tbody.querySelectorAll('[data-editar]').forEach(el => el.addEventListener('click', () => {
+    filaEditando = el.dataset.editar;
+    renderTabla();
+  }));
+  $tbody.querySelectorAll('[data-cancelar]').forEach(el => el.addEventListener('click', () => {
+    filaEditando = null;
+    renderTabla();
+  }));
+  $tbody.querySelectorAll('[data-guardar]').forEach(el => el.addEventListener('click', () => guardarFila(el.dataset.guardar)));
+}
+
+async function guardarFila(id){
+  const $btn = document.querySelector(`[data-guardar="${id}"]`);
+  if($btn){ $btn.disabled = true; $btn.textContent = 'Guardando…'; }
+  const nombre = document.getElementById(`ed-nombre-${id}`).value.trim();
+  const asistenciaVal = document.getElementById(`ed-asistencia-${id}`).value;
+  const attending = asistenciaVal === 'si' ? true : asistenciaVal === 'no' ? false : null;
+  const dietary_restrictions = document.getElementById(`ed-dieta-${id}`).value.trim() || null;
+  const song_request = document.getElementById(`ed-cancion-${id}`).value.trim() || null;
+  const message_to_couple = document.getElementById(`ed-mensaje-${id}`).value.trim() || null;
+
+  try{
+    const { error } = await sb.from('rsvp_guests')
+      .update({ display_name: nombre, attending, dietary_restrictions, song_request, message_to_couple })
+      .eq('id', id);
+    if(error) throw error;
+    filaEditando = null;
+    await cargar(false);
+  }catch(err){
+    console.error(err);
+    alert('No se pudo guardar el cambio. Probá de nuevo.');
+    if($btn){ $btn.disabled = false; $btn.textContent = 'Guardar'; }
+  }
 }
 
 function chipAsistencia(v){
