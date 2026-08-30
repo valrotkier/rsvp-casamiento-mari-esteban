@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel RSVP Boda</title>
+<script>
+  (function () {
+    try {
+      if (localStorage.getItem('tema') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    } catch (e) {}
+  })();
+</script>
+<style>
+  /* misma paleta que el formulario (rojo vino / crema), fija, sin modo oscuro automatico */
+  :root{
+    --bg:#faf5eb;
+    --surface:#fffdfa;
+    --surface-2:#f4e8de;
+    --ink:#2b1c20;
+    --muted:#8a6f6a;
+    --line:#e3d1c4;
+    --accent:#7a1f2e;
+    --accent-ink:#ffffff;
+    --accent-soft:#f3ded9;
+    --good:#1a8f52;
+    --good-soft:#e5f7ec;
+    --bad:#c4392f;
+    --bad-soft:#fbe9e7;
+    --pending:#a5750f;
+    --pending-soft:#fbf1e0;
+    --shadow:0 1px 2px rgba(33,20,20,.06), 0 8px 24px -8px rgba(33,20,20,.18);
+  }
+
+  /* modo oscuro (se activa a mano con el boton, no sigue al sistema) */
+  [data-theme="dark"]{
+    --bg:#1c0f11;
+    --surface:#271619;
+    --surface-2:#331d21;
+    --ink:#f4e6e0;
+    --muted:#c2a099;
+    --line:#45282c;
+    --accent:#e2a49b;
+    --accent-ink:#2b1214;
+    --accent-soft:#3d2226;
+    --good:#4ed08a;
+    --good-soft:#193324;
+    --bad:#f18a80;
+    --bad-soft:#3a1f1c;
+    --pending:#e0b256;
+    --pending-soft:#3a2f18;
+    --shadow:0 1px 2px rgba(0,0,0,.35), 0 8px 24px -8px rgba(0,0,0,.55);
+  }
+
+  /* mismas fuentes que la invitacion */
+  @font-face{
+    font-family:'Linotype Feltpen';
+    src:url('fonts/Linotype Feltpen Regular.otf') format('opentype');
+    font-weight:400; font-display:swap;
+  }
+  @font-face{
+    font-family:'The Seasons';
+    src:url('fonts/The Seasons Italic.ttf') format('truetype');
+    font-weight:400; font-style:italic; font-display:swap;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .envoltorio{max-width:1080px;margin:0 auto;padding:36px 24px 80px}
+
+  header.top{
+    display:flex;justify-content:space-between;align-items:flex-end;gap:16px;
+    flex-wrap:wrap;margin-bottom:26px;
+  }
+  .titulo-wrap h1{
+    font-family:"Linotype Feltpen","Iowan Old Style",Georgia,serif;
+    font-weight:400;font-size:34px;margin:0 0 2px;text-wrap:balance;color:var(--accent);
+  }
+  .titulo-wrap p{
+    margin:0;color:var(--muted);font-size:16px;
+    font-family:"The Seasons",Georgia,serif;font-style:italic;
+  }
+  .acciones-top{display:flex;gap:10px;align-items:center}
+  .btn{
+    font-family:inherit;cursor:pointer;border-radius:9px;font-size:13.5px;font-weight:600;
+    padding:9px 14px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);
+    display:inline-flex;align-items:center;gap:6px;transition:border-color .15s;
+  }
+  .btn:hover{border-color:var(--accent)}
+  .btn.primario{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .btn.primario:hover{filter:brightness(1.08)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .actualizado{font-size:12px;color:var(--muted)}
+
+  .tarjetas{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;
+  }
+  .tarjeta-stat{
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:18px 18px 16px;box-shadow:var(--shadow);
+  }
+  .tarjeta-stat .num{
+    font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;
+    display:flex;align-items:center;gap:8px;line-height:1;margin-bottom:6px;
+  }
+  .tarjeta-stat .num svg{width:20px;height:20px;flex:0 0 auto}
+  .tarjeta-stat .lbl{font-size:13px;color:var(--muted)}
+  .tarjeta-stat.si .num{color:var(--good)}
+  .tarjeta-stat.no .num{color:var(--bad)}
+  .tarjeta-stat.pend .num{color:var(--pending)}
+
+  .barra-progreso-wrap{
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:16px 18px;margin-bottom:22px;box-shadow:var(--shadow);
+  }
+  .barra-progreso-top{
+    display:flex;justify-content:space-between;font-size:13px;color:var(--muted);
+    margin-bottom:9px;
+  }
+  .barra-progreso-top strong{color:var(--ink)}
+  .barra{height:8px;border-radius:8px;background:var(--surface-2);overflow:hidden;display:flex}
+  .barra .si{background:var(--good)}
+  .barra .no{background:var(--bad)}
+
+  .panel-tabla{
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .panel-top{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    padding:16px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap;
+  }
+  .panel-top h2{font-size:15px;margin:0}
+  .buscador{
+    border:1.5px solid var(--line);border-radius:9px;padding:8px 12px;
+    font-family:inherit;font-size:13.5px;background:var(--bg);color:var(--ink);
+    min-width:220px;
+  }
+  .buscador:focus{outline:none;border-color:var(--accent)}
+
+  .tabla-scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:820px}
+  thead th{
+    text-align:left;font-weight:600;color:var(--muted);font-size:12px;
+    text-transform:uppercase;letter-spacing:.04em;
+    padding:11px 14px;border-bottom:1px solid var(--line);
+    background:var(--surface-2);white-space:nowrap;cursor:pointer;user-select:none;
+  }
+  thead th:hover{color:var(--ink)}
+  thead th .flecha{opacity:.5;margin-left:3px;font-size:11px}
+  tbody td{
+    padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top;
+  }
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr.fila-sombra{background:var(--surface-2)}
+  tbody tr:hover{background:var(--accent-soft)}
+  td.texto-largo{max-width:220px;color:var(--muted)}
+  td .vacio{color:var(--muted);opacity:.5}
+
+  .celda-invitado{display:flex;align-items:center;gap:9px}
+  .grupo-num{
+    flex:0 0 auto;width:24px;height:24px;border-radius:7px;background:var(--surface-2);
+    color:var(--muted);font-size:10.5px;font-weight:700;display:inline-flex;align-items:center;
+    justify-content:center;font-variant-numeric:tabular-nums;
+  }
+  tr.fila-sombra .grupo-num{background:var(--surface)}
+  .indent-hijo{color:var(--muted)}
+  .chip-contacto{
+    display:inline-flex;font-size:10px;font-weight:700;color:var(--accent);
+    background:var(--accent-soft);border-radius:20px;padding:2px 8px;margin-left:6px;
+    vertical-align:middle;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;
+  }
+
+  .chip{
+    display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;
+    padding:3px 10px;border-radius:20px;white-space:nowrap;
+  }
+  .chip.si{background:var(--good-soft);color:var(--good)}
+  .chip.no{background:var(--bad-soft);color:var(--bad)}
+  .chip.pend{background:var(--pending-soft);color:var(--pending)}
+
+  .estado-carga,.estado-vacio,.estado-error{
+    text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;
+  }
+  .estado-error{color:var(--bad)}
+
+  .btn-tema{
+    width:38px;height:38px;border-radius:50%;border:1px solid var(--line);
+    background:var(--surface);color:var(--ink);font-size:16px;line-height:1;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    box-shadow:var(--shadow);transition:transform .15s ease, background .2s ease;padding:0;
+  }
+  .btn-tema:hover{transform:scale(1.06)}
+
+  [hidden]{display:none!important}
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.js"></script>
+</head>
+<body>
+<div class="envoltorio">
+  <header class="top">
+    <div class="titulo-wrap">
+      <h1>RSVP — Marina & Esteban</h1>
+      <p>Bodega Spinoglio · Sábado, 21 de Noviembre de 2026</p>
+    </div>
+    <div class="acciones-top">
+      <span class="actualizado" id="actualizado"></span>
+      <button class="btn" id="btn-csv">⭳ Exportar CSV</button>
+      <button class="btn primario" id="btn-refrescar">↻ Actualizar</button>
+      <button class="btn-tema" id="btn-tema" type="button" aria-label="Cambiar tema" title="Cambiar tema">🌙</button>
+    </div>
+  </header>
+
+  <div id="contenido">
+    <div class="estado-carga">Cargando respuestas…</div>
+  </div>
+</div>
+
+<script>
+/* ✏️ mismas credenciales que rsvp.html — no hace falta tocarlas */
+const SUPABASE_URL = "https://hlqrdwpqxgxabqrvhgxz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhscXJkd3BxeGd4YWJxcnZoZ3h6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTIxNDAsImV4cCI6MjA5MzMyODE0MH0.DkBXUZKYWFwUjMFHCpMg-ujJZCwsm16BzGE_hjxrRm0";
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $contenido = document.getElementById('contenido');
+const $actualizado = document.getElementById('actualizado');
+
+function aplicarTema(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  try { localStorage.setItem('tema', t); } catch (e) {}
+  const btnTema = document.getElementById('btn-tema');
+  if (btnTema) btnTema.textContent = t === 'dark' ? '☀️' : '🌙';
+}
+function toggleTema() {
+  const actual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  aplicarTema(actual === 'dark' ? 'light' : 'dark');
+}
+(function () {
+  let guardado = null;
+  try { guardado = localStorage.getItem('tema'); } catch (e) {}
+  aplicarTema(guardado === 'dark' ? 'dark' : 'light');
+  document.getElementById('btn-tema').onclick = toggleTema;
+})();
+
+let filas = [];
+let gruposIndex = new Map(); // group_id -> número de grupo estable (orden de llegada)
+let orden = { campo: 'grupo', asc: true };
+let busqueda = '';
+
+function calcularGrupos(){
+  const primeraFecha = new Map();
+  filas.forEach(f => {
+    const actual = primeraFecha.get(f.group_id);
+    if(!actual || f.created_at < actual) primeraFecha.set(f.group_id, f.created_at);
+  });
+  const idsOrdenados = [...primeraFecha.entries()]
+    .sort((a,b) => a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0)
+    .map(e => e[0]);
+  const mapa = new Map();
+  idsOrdenados.forEach((id, i) => mapa.set(id, i+1));
+  return mapa;
+}
+
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtFecha(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('es-UY', { day:'2-digit', month:'2-digit', year:'numeric' }) + ' ' +
+         d.toLocaleTimeString('es-UY', { hour:'2-digit', minute:'2-digit' });
+}
+
+async function cargar(mostrarCarga){
+  if(mostrarCarga) $contenido.innerHTML = `<div class="estado-carga">Cargando respuestas…</div>`;
+  try{
+    const { data, error } = await sb
+      .from('rsvp_guests')
+      .select('id, display_name, is_primary, attending, dietary_restrictions, song_request, message_to_couple, responded_at, created_at, group_id, rsvp_groups(first_name, last_name)')
+      .order('created_at', { ascending: true });
+    if(error) throw error;
+    filas = data || [];
+    gruposIndex = calcularGrupos();
+    $actualizado.textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-UY', { hour:'2-digit', minute:'2-digit' });
+    renderTodo();
+  }catch(err){
+    console.error(err);
+    $contenido.innerHTML = `<div class="estado-error">No pudimos cargar las respuestas. Probá actualizar de nuevo.</div>`;
+  }
+}
+
+function renderTodo(){
+  const total = filas.length;
+  const asisten = filas.filter(f=>f.attending===true).length;
+  const rechazan = filas.filter(f=>f.attending===false).length;
+  const pendientes = total - asisten - rechazan;
+  const pctRespondido = total ? Math.round(((asisten+rechazan)/total)*100) : 0;
+
+  $contenido.innerHTML = `
+    <div class="tarjetas">
+      <div class="tarjeta-stat si">
+        <div class="num"><svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5 9.5 18 20 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>${asisten}</div>
+        <div class="lbl">Invitados que asisten</div>
+      </div>
+      <div class="tarjeta-stat no">
+        <div class="num"><svg viewBox="0 0 24 24" fill="none"><path d="M6 6 18 18M18 6 6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>${rechazan}</div>
+        <div class="lbl">Invitados que rechazaron</div>
+      </div>
+      <div class="tarjeta-stat pend">
+        <div class="num"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="2"/><path d="M12 7.5V12l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>${pendientes}</div>
+        <div class="lbl">En espera de respuesta</div>
+      </div>
+    </div>
+
+    <div class="barra-progreso-wrap">
+      <div class="barra-progreso-top"><span><strong>${pctRespondido}%</strong> respondieron</span><span>${total} invitado${total===1?'':'s'} en total</span></div>
+      <div class="barra">
+        <div class="si" style="width:${total?asisten/total*100:0}%"></div>
+        <div class="no" style="width:${total?rechazan/total*100:0}%"></div>
+      </div>
+    </div>
+
+    <div class="panel-tabla">
+      <div class="panel-top">
+        <h2>Todas las respuestas</h2>
+        <input class="buscador" id="buscador" type="text" placeholder="Buscar por nombre…" value="${esc(busqueda)}">
+      </div>
+      <div class="tabla-scroll">
+        <table>
+          <thead><tr>
+            ${th('display_name','Invitado')}
+            ${th('grupo','Grupo')}
+            ${th('attending','Asistencia')}
+            ${th('dietary_restrictions','Restricciones')}
+            ${th('song_request','Canción')}
+            ${th('message_to_couple','Mensaje')}
+            ${th('responded_at','Respondió')}
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div id="tabla-vacia" class="estado-vacio" hidden>No hay invitados que coincidan con la búsqueda.</div>
+    </div>
+  `;
+
+  document.getElementById('buscador').addEventListener('input', e=>{ busqueda = e.target.value; renderTabla(); });
+  document.querySelectorAll('th[data-campo]').forEach(el => el.addEventListener('click', ()=>{
+    const campo = el.dataset.campo;
+    if(orden.campo === campo) orden.asc = !orden.asc; else { orden.campo = campo; orden.asc = true; }
+    renderTodo();
+  }));
+  renderTabla();
+}
+
+function th(campo, etiqueta){
+  const activa = orden.campo === campo;
+  const flecha = activa ? (orden.asc ? '▲' : '▼') : '';
+  return `<th data-campo="${campo}">${esc(etiqueta)}<span class="flecha">${flecha}</span></th>`;
+}
+
+function valorOrden(f, campo){
+  if(campo === 'grupo') return gruposIndex.get(f.group_id) || 0;
+  if(campo === 'attending') return f.attending===true ? 2 : f.attending===false ? 0 : 1;
+  if(campo === 'display_name') return (f.display_name||'').toLowerCase();
+  return f[campo] || '';
+}
+
+function renderTabla(){
+  const q = busqueda.trim().toLowerCase();
+  let vistas = filas.filter(f => {
+    if(!q) return true;
+    const hay = `${f.display_name} ${f.rsvp_groups?.first_name||''} ${f.rsvp_groups?.last_name||''}`.toLowerCase();
+    return hay.includes(q);
+  });
+  vistas = vistas.slice().sort((a,b)=>{
+    const va = valorOrden(a, orden.campo), vb = valorOrden(b, orden.campo);
+    if(va < vb) return orden.asc ? -1 : 1;
+    if(va > vb) return orden.asc ? 1 : -1;
+    // dentro del mismo grupo: el contacto primero, después por orden de llegada
+    if(a.group_id === b.group_id){
+      if(a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;
+      return a.created_at < b.created_at ? -1 : 1;
+    }
+    return 0;
+  });
+
+  const $tbody = document.getElementById('tbody');
+  const $vacia = document.getElementById('tabla-vacia');
+  if(vistas.length === 0){
+    $tbody.innerHTML = '';
+    $vacia.hidden = false;
+    return;
+  }
+  $vacia.hidden = true;
+  let html = '';
+  let grupoAnterior = null;
+  let sombra = false;
+  for(const f of vistas){
+    if(f.group_id !== grupoAnterior){ sombra = !sombra; grupoAnterior = f.group_id; }
+    const numGrupo = gruposIndex.get(f.group_id) || '?';
+    html += `
+    <tr class="${sombra ? 'fila-sombra' : ''}">
+      <td>
+        <div class="celda-invitado">
+          <span class="grupo-num" title="Grupo ${numGrupo}">${numGrupo}</span>
+          <span>${f.is_primary ? '' : '<span class="indent-hijo">↳ </span>'}${esc(f.display_name)}${f.is_primary?' <span class="chip-contacto">Contacto</span>':''}</span>
+        </div>
+      </td>
+      <td>${esc(f.rsvp_groups?.first_name||'')} ${esc(f.rsvp_groups?.last_name||'')}</td>
+      <td>${chipAsistencia(f.attending)}</td>
+      <td class="texto-largo">${f.dietary_restrictions ? esc(f.dietary_restrictions) : '<span class="vacio">—</span>'}</td>
+      <td class="texto-largo">${f.song_request ? esc(f.song_request) : '<span class="vacio">—</span>'}</td>
+      <td class="texto-largo">${f.message_to_couple ? esc(f.message_to_couple) : '<span class="vacio">—</span>'}</td>
+      <td>${f.responded_at ? fmtFecha(f.responded_at) : '<span class="vacio">—</span>'}</td>
+    </tr>
+  `;
+  }
+  $tbody.innerHTML = html;
+}
+
+function chipAsistencia(v){
+  if(v === true) return `<span class="chip si">✓ Asiste</span>`;
+  if(v === false) return `<span class="chip no">✕ No asiste</span>`;
+  return `<span class="chip pend">⏱ Pendiente</span>`;
+}
+
+function exportarCSV(){
+  const encabezados = ['Grupo','Invitado','Contacto del grupo','Asistencia','Restricciones alimentarias','Canción','Mensaje para los novios','Respondió el'];
+  const filasCSV = filas.map(f => [
+    gruposIndex.get(f.group_id) || '',
+    f.display_name || '',
+    `${f.rsvp_groups?.first_name||''} ${f.rsvp_groups?.last_name||''}`.trim(),
+    f.attending===true ? 'Asiste' : f.attending===false ? 'No asiste' : 'Pendiente',
+    f.dietary_restrictions || '',
+    f.song_request || '',
+    f.message_to_couple || '',
+    f.responded_at ? fmtFecha(f.responded_at) : '',
+  ]);
+  const csv = [encabezados, ...filasCSV]
+    .map(fila => fila.map(v => `"${String(v).replace(/"/g,'""')}"`).join(','))
+    .join('\r\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'rsvp-marina-y-esteban.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('btn-refrescar').addEventListener('click', ()=>cargar(false));
+document.getElementById('btn-csv').addEventListener('click', exportarCSV);
+
+cargar(true);
+setInterval(()=>cargar(false), 30000);
+</script>
+</body>
+</html>

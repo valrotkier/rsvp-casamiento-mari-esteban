@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RSVP Marina & Esteban</title>
+  <script>
+    (function () {
+      try {
+        if (localStorage.getItem('tema') === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+    /* ───────── tokens ───────── */
+    /* paleta tomada de las capturas: rojo vino de fondo, crema de las tarjetas, borravino de los textos con estilo */
+    :root {
+      --bg: #faf5eb;
+      --surface: #fffdfa;
+      --surface-2: #f4e8de;
+      --ink: #2b1c20;
+      --muted: #8a6f6a;
+      --line: #e3d1c4;
+      --accent: #7a1f2e;
+      --accent-ink: #ffffff;
+      --accent-soft: #f3ded9;
+      --good: #1a8f52;
+      --good-soft: #e5f7ec;
+      --bad: #c4392f;
+      --bad-soft: #fbe9e7;
+      --shadow: 0 1px 2px rgba(33, 20, 20, .06), 0 8px 24px -8px rgba(33, 20, 20, .18);
+    }
+
+    /* modo oscuro (se activa a mano con el botón, no sigue al sistema) */
+    [data-theme="dark"] {
+      --bg: #1c0f11;
+      --surface: #271619;
+      --surface-2: #331d21;
+      --ink: #f4e6e0;
+      --muted: #c2a099;
+      --line: #45282c;
+      --accent: #e2a49b;
+      --accent-ink: #2b1214;
+      --accent-soft: #3d2226;
+      --good: #4ed08a;
+      --good-soft: #193324;
+      --bad: #f18a80;
+      --bad-soft: #3a1f1c;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 8px 24px -8px rgba(0, 0, 0, .55);
+    }
+
+    /* fuentes de la invitación (archivos propios, no Google Fonts) */
+    @font-face {
+      font-family: 'Linotype Feltpen';
+      src: url('fonts/Linotype Feltpen Regular.otf') format('opentype');
+      font-weight: 400;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'Linotype Feltpen';
+      src: url('fonts/Linotype Feltpen Medium.otf') format('opentype');
+      font-weight: 600;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'The Seasons';
+      src: url('fonts/The Seasons Light.ttf') format('truetype');
+      font-weight: 300;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'The Seasons';
+      src: url('fonts/The Seasons Light Italic.ttf') format('truetype');
+      font-weight: 300;
+      font-style: italic;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'The Seasons';
+      src: url('fonts/The Seasons Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'The Seasons';
+      src: url('fonts/The Seasons Italic.ttf') format('truetype');
+      font-weight: 400;
+      font-style: italic;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'The Seasons';
+      src: url('fonts/The Seasons Bold.ttf') format('truetype');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'The Seasons';
+      src: url('fonts/The Seasons Bold Italic.ttf') format('truetype');
+      font-weight: 700;
+      font-style: italic;
+      font-display: swap;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: #484848;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      position: relative;
+    }
+
+    /* imagen de fondo cubriendo TODA la pantalla (responsive, sin bordes vacíos), oscurecida con una capa negra encima */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-color: #050302;
+      background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('fondo.png');
+      background-size: cover;
+      background-position: center 75%;
+      /* <- mas alto = mas arriba de la foto; mas cerca de 100% = mas abajo (mas verde) */
+      background-repeat: no-repeat;
+      z-index: -1;
+      /* <- para mas o menos oscuro, subi o bajá el 0.45 de arriba (0 = sin oscurecer, 1 = negro total) */
+    }
+
+    ::selection {
+      background: var(--accent-soft)
+    }
+
+    .pantalla {
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 56px 20px 80px;
+    }
+
+    .tarjeta {
+      width: 100%;
+      max-width: 430px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 36px 30px 34px;
+    }
+
+    .volver-sitio {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13.5px;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      margin-bottom: 22px;
+    }
+
+    .volver-sitio:hover {
+      text-decoration: underline
+    }
+
+    .encabezado {
+      text-align: center;
+      margin-bottom: 30px
+    }
+
+    .novios {
+      font-family: "Linotype Feltpen", "Iowan Old Style", Georgia, serif;
+      font-size: 46px;
+      font-weight: 400;
+      letter-spacing: 0;
+      text-wrap: balance;
+      margin: 0 0 8px;
+      color: var(--accent);
+    }
+
+    .evento-lugar {
+      color: var(--accent);
+      font-family: "The Seasons", Georgia, serif;
+      font-weight: 400;
+      font-size: 22px;
+      margin: 0
+    }
+
+    .evento-fecha {
+      color: var(--muted);
+      font-family: "The Seasons", Georgia, serif;
+      font-size: 18px;
+      margin: 2px 0 0
+    }
+
+    h2.paso-titulo {
+      font-size: 16.5px;
+      font-weight: 700;
+      text-align: center;
+      margin: 0 0 6px;
+      letter-spacing: -.005em;
+    }
+
+    p.paso-ayuda {
+      font-size: 14px;
+      color: #858585;
+      text-align: center;
+      margin: 0 0 26px;
+      line-height: 1.5;
+    }
+
+    .fila-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 22px
+    }
+
+    label.campo-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 7px;
+      color: var(--ink);
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      border: none;
+      border-bottom: 1.5px solid var(--line);
+      border-radius: 0;
+      background: transparent;
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 15.5px;
+      padding: 8px 2px;
+      transition: border-color .15s;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 84px;
+      line-height: 1.5
+    }
+
+    input[type="text"]::placeholder,
+    textarea::placeholder {
+      color: var(--muted);
+      opacity: .7
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      outline: none;
+      border-bottom-color: var(--accent);
+      border-bottom-width: 2px;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer
+    }
+
+    .btn-primario {
+      width: 100%;
+      border: none;
+      border-radius: 11px;
+      background: var(--accent);
+      color: var(--accent-ink);
+      font-size: 15.5px;
+      font-weight: 700;
+      padding: 14px 20px;
+      transition: filter .15s, transform .05s;
+    }
+
+    .btn-primario:hover {
+      filter: brightness(1.08)
+    }
+
+    .btn-primario:active {
+      transform: scale(.99)
+    }
+
+    .btn-primario:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      filter: none
+    }
+
+    .btn-texto {
+      display: block;
+      width: 100%;
+      text-align: center;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 13.5px;
+      margin-top: 16px;
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .btn-texto:hover {
+      color: var(--ink)
+    }
+
+    /* stepper cantidad */
+    .stepper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin: 0 auto 20px;
+      width: 180px;
+      border: 1.5px solid var(--line);
+      border-radius: 11px;
+      overflow: hidden;
+    }
+
+    .stepper button {
+      flex: 0 0 52px;
+      height: 52px;
+      border: none;
+      background: var(--surface-2);
+      color: var(--ink);
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .stepper button:disabled {
+      opacity: .35;
+      cursor: not-allowed
+    }
+
+    .stepper .valor {
+      flex: 1;
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* lista de invitados */
+    .lista-invitados {
+      border-top: 1px solid var(--line);
+      margin-top: 4px
+    }
+
+    .fila-invitado {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 2px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .fila-invitado .nombre-wrap {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0
+    }
+
+    .fila-invitado .nombre {
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lapiz {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 13px;
+      flex: 0 0 auto;
+      padding: 2px;
+      line-height: 1;
+    }
+
+    .lapiz:hover {
+      color: var(--accent)
+    }
+
+    .nombre-input {
+      font: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      background: var(--surface);
+      border: 1.5px solid var(--accent);
+      border-radius: 7px;
+      padding: 5px 8px;
+      min-width: 0;
+      width: 100%;
+      max-width: 190px;
+    }
+
+    .nombre-input:focus {
+      outline: none
+    }
+
+    .estado-ok {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--good);
+      font-size: 13.5px;
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+
+    .btn-responder {
+      flex: 0 0 auto;
+      border: 1.5px solid var(--accent);
+      color: var(--accent);
+      background: none;
+      border-radius: 9px;
+      font-size: 13.5px;
+      font-weight: 700;
+      padding: 9px 16px;
+    }
+
+    .btn-responder:hover {
+      background: var(--accent-soft)
+    }
+
+    .acciones-lista {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 18px 0 26px;
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+
+    .acciones-lista button {
+      background: none;
+      border: none;
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .acciones-lista button:hover {
+      text-decoration: underline
+    }
+
+    .acciones-lista button:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+      text-decoration: none
+    }
+
+    /* preguntas por invitado */
+    .respondiendo-por {
+      font-size: 15.5px;
+      font-weight: 700;
+      text-align: left;
+      margin: 0 0 4px;
+    }
+
+    .linea {
+      border: none;
+      border-top: 1px solid var(--line);
+      margin: 18px 0 22px
+    }
+
+    .pregunta {
+      margin-bottom: 22px;
+      animation: aparecer .35s ease both
+    }
+
+    @keyframes aparecer {
+      from {
+        opacity: 0;
+        transform: translateY(6px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .pregunta-num {
+      font-size: 13.5px;
+      font-weight: 700;
+      margin: 0 0 12px;
+      color: #484848;
+      ;
+    }
+
+    .pregunta-num .req {
+      color: var(--bad);
+      font-weight: 700
+    }
+
+    .opciones-si-no {
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    .opcion-si-no {
+      width: 100%;
+      text-align: center;
+      border: 1.5px solid var(--line);
+      border-radius: 30px;
+      background: var(--surface);
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 600;
+      padding: 14px 18px;
+      transition: border-color .15s, background .15s;
+    }
+
+    .opcion-si-no:hover {
+      border-color: var(--accent)
+    }
+
+    .opcion-si-no.elegida {
+      border-color: var(--ink);
+      border-width: 2px;
+      font-weight: 700;
+    }
+
+    .opcion-si-no.elegida.si {
+      border-color: var(--good);
+      background: var(--good-soft);
+      color: var(--good)
+    }
+
+    .opcion-si-no.elegida.no {
+      border-color: var(--bad);
+      background: var(--bad-soft);
+      color: var(--bad)
+    }
+
+    .req-nota {
+      font-size: 12.5px;
+      color: var(--muted);
+      text-align: center;
+      margin: 16px 0 0
+    }
+
+    /* thank you */
+    .icono-check {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--good-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+    }
+
+    .icono-check svg {
+      width: 26px;
+      height: 26px
+    }
+
+    .resumen-grupo {
+      background: var(--surface-2);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin: 22px 0;
+    }
+
+    .resumen-fila {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      padding: 7px 0;
+    }
+
+    .resumen-fila+.resumen-fila {
+      border-top: 1px solid var(--line)
+    }
+
+    .chip-estado {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .chip-estado.si {
+      background: var(--good-soft);
+      color: var(--good)
+    }
+
+    .chip-estado.no {
+      background: var(--bad-soft);
+      color: var(--bad)
+    }
+
+    .estado-carga,
+    .estado-error {
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+      padding: 40px 10px;
+    }
+
+    .estado-error {
+      color: var(--bad)
+    }
+
+    .btn-tema {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 50;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform .15s ease, background .2s ease;
+      padding: 0;
+    }
+
+    .btn-tema:hover {
+      transform: scale(1.06)
+    }
+
+    [hidden] {
+      display: none !important
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .pregunta {
+        animation: none
+      }
+    }
+  </style>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.js"></script>
+</head>
+
+<body>
+  <button class="btn-tema" id="btn-tema" type="button" aria-label="Cambiar tema" title="Cambiar tema">🌙</button>
+  <div class="pantalla">
+    <div class="tarjeta" id="tarjeta">
+      <div class="estado-carga">Cargando…</div>
+    </div>
+  </div>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════════════
+       ✏️ CONFIGURACIÓN — lo único que normalmente necesitás tocar
+       ═══════════════════════════════════════════════════════════════ */
+    const EVENTO = {
+      novios: "Marina & Esteban",
+      lugar: "Bodega Spinoglio",
+      fecha: "Sábado, 21 de Noviembre de 2026",
+      linkSitio: "#", // ✏️ poné acá el link a la página principal de la invitación
+    };
+    const SUPABASE_URL = "https://hlqrdwpqxgxabqrvhgxz.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhscXJkd3BxeGd4YWJxcnZoZ3h6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTIxNDAsImV4cCI6MjA5MzMyODE0MH0.DkBXUZKYWFwUjMFHCpMg-ujJZCwsm16BzGE_hjxrRm0";
+    /* ═══════════════════════════════════════════════════════════════ */
+
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const $card = document.getElementById('tarjeta');
+
+    function aplicarTema(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      try { localStorage.setItem('tema', t); } catch (e) {}
+      const btnTema = document.getElementById('btn-tema');
+      if (btnTema) btnTema.textContent = t === 'dark' ? '☀️' : '🌙';
+    }
+    function toggleTema() {
+      const actual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      aplicarTema(actual === 'dark' ? 'light' : 'dark');
+    }
+    (function () {
+      let guardado = null;
+      try { guardado = localStorage.getItem('tema'); } catch (e) {}
+      aplicarTema(guardado === 'dark' ? 'dark' : 'light');
+      document.getElementById('btn-tema').onclick = toggleTema;
+    })();
+
+    const state = {
+      step: 'nombre',        // nombre | cantidad | lista | preguntas | gracias
+      groupId: null,
+      firstName: '',
+      lastName: '',
+      guests: [],             // [{id, display_name, is_primary, attending, ...}]
+      answeringId: null,      // id del invitado que se está respondiendo
+      answeringDraft: {},      // respuestas en progreso para ese invitado
+      answeringRevealed: 1,    // cuántas preguntas van reveladas (1..4)
+      editingId: null,         // id del invitado cuyo nombre se está editando inline
+    };
+
+    function esc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function encabezadoHTML() {
+      return `
+    <a class="volver-sitio" href="${esc(EVENTO.linkSitio)}">‹ Sitio del evento</a>
+    <div class="encabezado">
+      <h1 class="novios">${esc(EVENTO.novios)}</h1>
+      <p class="evento-lugar">${esc(EVENTO.lugar)}</p>
+      <p class="evento-fecha">${esc(EVENTO.fecha)}</p>
+    </div>
+  `;
+    }
+
+    function render() {
+      if (state.step === 'nombre') return renderNombre();
+      if (state.step === 'ya-registrado') return renderYaRegistrado();
+      if (state.step === 'cantidad') return renderCantidad();
+      if (state.step === 'lista') return renderLista();
+      if (state.step === 'preguntas') return renderPreguntas();
+      if (state.step === 'gracias') return renderGracias();
+    }
+
+    /* ---------- paso 1: nombre ---------- */
+    function renderNombre() {
+      $card.innerHTML = `
+    ${encabezadoHTML()}
+    <h2 class="paso-titulo">Ingresa tu nombre para confirmar tu asistencia</h2>
+    <p class="paso-ayuda">Podrás responder por más invitados en los siguientes pasos.</p>
+    <div class="fila-2">
+      <div>
+        <label class="campo-label" for="in-nombre">Nombre</label>
+        <input type="text" id="in-nombre" placeholder="Nombre" value="${esc(state.firstName)}">
+      </div>
+      <div>
+        <label class="campo-label" for="in-apellido">Apellido(s)</label>
+        <input type="text" id="in-apellido" placeholder="Apellido(s)" value="${esc(state.lastName)}">
+      </div>
+    </div>
+    <button class="btn-primario" id="btn-siguiente">Siguiente</button>
+    <p class="estado-error" id="err" hidden></p>
+  `;
+      document.getElementById('btn-siguiente').onclick = onEnviarNombre;
+      document.getElementById('in-apellido').addEventListener('keydown', e => { if (e.key === 'Enter') onEnviarNombre(); });
+    }
+
+    async function onEnviarNombre() {
+      const nombre = document.getElementById('in-nombre').value.trim();
+      const apellido = document.getElementById('in-apellido').value.trim();
+      const $err = document.getElementById('err');
+      if (!nombre || !apellido) {
+        $err.textContent = 'Completá nombre y apellido para continuar.';
+        $err.hidden = false;
+        return;
+      }
+      const $btn = document.getElementById('btn-siguiente');
+      $btn.disabled = true; $btn.textContent = 'Un momento…';
+      try {
+        // ¿ya existe una confirmación con este nombre y apellido? (evita duplicados)
+        const { data: existentes, error: e0 } = await sb.from('rsvp_groups')
+          .select('id')
+          .ilike('first_name', nombre)
+          .ilike('last_name', apellido);
+        if (e0) throw e0;
+        if (existentes && existentes.length > 0) {
+          state.firstName = nombre;
+          state.lastName = apellido;
+          state.step = 'ya-registrado';
+          render();
+          return;
+        }
+
+        const { data: group, error: e1 } = await sb.from('rsvp_groups')
+          .insert({ first_name: nombre, last_name: apellido, party_size: 1 })
+          .select().single();
+        if (e1) throw e1;
+        const { data: guest, error: e2 } = await sb.from('rsvp_guests')
+          .insert({ group_id: group.id, display_name: `${nombre} ${apellido}`, is_primary: true })
+          .select().single();
+        if (e2) throw e2;
+        state.groupId = group.id;
+        state.firstName = nombre;
+        state.lastName = apellido;
+        state.guests = [guest];
+        state.step = 'cantidad';
+        render();
+      } catch (err) {
+        console.error(err);
+        $err.textContent = 'No pudimos guardar tu respuesta. Probá de nuevo en un momento.';
+        $err.hidden = false;
+        $btn.disabled = false; $btn.textContent = 'Siguiente';
+      }
+    }
+
+    /* ---------- ya registrado (nombre duplicado) ---------- */
+    function renderYaRegistrado() {
+      $card.innerHTML = `
+    ${encabezadoHTML()}
+    <div class="icono-check">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5 9.5 18 20 6" stroke="#1a8f52" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h2 class="paso-titulo" style="text-align:center">Ya tenemos tu confirmación</h2>
+    <p class="paso-ayuda" style="text-align:center">
+      Encontramos una respuesta guardada a nombre de <strong>${esc(state.firstName)} ${esc(state.lastName)}</strong>.
+      Si necesitás corregir o agregar algo, escribinos directamente a los novios — no hace falta volver a completar el formulario.
+    </p>
+    <button class="btn-primario" id="btn-volver-inicio">Volver al inicio</button>
+  `;
+      document.getElementById('btn-volver-inicio').onclick = () => {
+        state.step = 'nombre';
+        state.firstName = '';
+        state.lastName = '';
+        render();
+      };
+    }
+
+    /* ---------- helpers de navegación secuencial ---------- */
+    function primerSinResponder() {
+      return state.guests.find(g => g.attending === null) || null;
+    }
+    function irAPreguntasDe(id) {
+      state.answeringId = id;
+      state.answeringDraft = {};
+      state.answeringRevealed = 1;
+      state.step = 'preguntas';
+      render();
+    }
+    function irAlSiguientePasoTrasCantidad() {
+      const pendiente = primerSinResponder();
+      if (pendiente) { irAPreguntasDe(pendiente.id); return; }
+      state.step = 'lista';
+      render();
+    }
+
+    /* ---------- paso 2: cantidad ---------- */
+    function renderCantidad() {
+      $card.innerHTML = `
+    ${encabezadoHTML()}
+    <h2 class="paso-titulo">¿Cuántas personas hay en tu grupo?</h2>
+    <div class="stepper">
+      <button id="menos" ${state.guests.length <= 1 ? 'disabled' : ''}>−</button>
+      <div class="valor" id="valor-cant">${state.guests.length}</div>
+      <button id="mas" ${state.guests.length >= 10 ? 'disabled' : ''}>+</button>
+    </div>
+    <p class="paso-ayuda" style="margin-top:-6px">Incluíte a ti y a cualquiera que asista contigo.</p>
+    <button class="btn-primario" id="btn-siguiente">Siguiente</button>
+  `;
+      document.getElementById('menos').onclick = () => ajustarCantidad(-1);
+      document.getElementById('mas').onclick = () => ajustarCantidad(1);
+      document.getElementById('btn-siguiente').onclick = irAlSiguientePasoTrasCantidad;
+    }
+
+    function ajustarCantidad(delta) {
+      const n = state.guests.length + delta;
+      if (n < 1 || n > 10) return;
+      document.getElementById('valor-cant').textContent = state.guests.length; // se corrige abajo tras el await visual
+      aplicarCantidad(n);
+    }
+
+    async function aplicarCantidad(n) {
+      const $mas = document.getElementById('mas'), $menos = document.getElementById('menos');
+      if ($mas) $mas.disabled = true; if ($menos) $menos.disabled = true;
+      try {
+        while (state.guests.length < n) {
+          const idx = state.guests.filter(g => !g.is_primary).length + 1;
+          const { data, error } = await sb.from('rsvp_guests')
+            .insert({ group_id: state.groupId, display_name: `Invitado adicional ${idx}`, is_primary: false })
+            .select().single();
+          if (error) throw error;
+          state.guests.push(data);
+        }
+        while (state.guests.length > n) {
+          const last = [...state.guests].reverse().find(g => !g.is_primary);
+          if (!last) break;
+          await sb.from('rsvp_guests').delete().eq('id', last.id);
+          state.guests = state.guests.filter(g => g.id !== last.id);
+        }
+        await sb.from('rsvp_groups').update({ party_size: state.guests.length }).eq('id', state.groupId);
+      } catch (err) {
+        console.error(err);
+      }
+      renderCantidad();
+    }
+
+    /* ---------- paso 3: lista de invitados ---------- */
+    function renderLista() {
+      const filas = state.guests.map(g => {
+        const editando = state.editingId === g.id;
+        const nombreHTML = editando
+          ? `<input type="text" class="nombre-input" data-input-nombre="${g.id}" value="${esc(g.display_name)}" maxlength="60">`
+          : `<span class="nombre">${esc(g.display_name)}</span>
+         ${g.is_primary ? '' : `<button class="lapiz" data-editar="${g.id}" title="Editar nombre" aria-label="Editar nombre">✎</button>`}`;
+        return `
+    <div class="fila-invitado">
+      <div class="nombre-wrap">${nombreHTML}</div>
+      ${editando ? '' :
+            g.attending !== null
+              ? `<span class="estado-ok">✓ Respondido</span>`
+              : `<button class="btn-responder" data-responder="${g.id}">Responder</button>`
+          }
+    </div>
+  `;
+      }).join('');
+
+      $card.innerHTML = `
+    ${encabezadoHTML()}
+    <div class="lista-invitados">${filas}</div>
+    <div class="acciones-lista">
+      <button id="agregar" ${state.guests.length >= 10 ? 'disabled' : ''}>⊕ Agregar otro invitado</button>
+      <button id="eliminar" ${state.guests.length <= 1 ? 'disabled' : ''}>⊖ Eliminar invitado</button>
+    </div>
+    <button class="btn-primario" id="btn-continuar">Continuar</button>
+  `;
+
+      document.getElementById('agregar').onclick = () => aplicarCantidad(state.guests.length + 1).then(() => { state.step = 'lista'; });
+      document.getElementById('eliminar').onclick = () => aplicarCantidad(state.guests.length - 1).then(() => { state.step = 'lista'; });
+      document.querySelectorAll('[data-responder]').forEach(b => b.onclick = () => irAPreguntasDe(b.dataset.responder));
+      document.querySelectorAll('[data-editar]').forEach(b => b.onclick = () => {
+        state.editingId = b.dataset.editar;
+        renderLista();
+      });
+      const $input = document.querySelector('[data-input-nombre]');
+      if ($input) {
+        $input.focus();
+        $input.select();
+        let cancelado = false;
+        $input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); $input.blur(); }
+          else if (e.key === 'Escape') { cancelado = true; $input.blur(); }
+        });
+        $input.addEventListener('blur', () => {
+          if (cancelado) { state.editingId = null; renderLista(); return; }
+          guardarNombreInline($input.dataset.inputNombre, $input.value);
+        });
+      }
+      document.getElementById('btn-continuar').onclick = () => {
+        const pendiente = primerSinResponder();
+        if (pendiente) { irAPreguntasDe(pendiente.id); return; }
+        state.step = 'gracias';
+        render();
+      };
+    }
+
+    async function guardarNombreInline(id, valorCrudo) {
+      const guest = state.guests.find(g => g.id === id);
+      const nuevo = valorCrudo.trim();
+      state.editingId = null;
+      if (!nuevo || nuevo === guest.display_name) { renderLista(); return; }
+      try {
+        await sb.from('rsvp_guests').update({ display_name: nuevo }).eq('id', id);
+        guest.display_name = nuevo;
+      } catch (err) { console.error(err); }
+      renderLista();
+    }
+
+    /* ---------- paso 4: preguntas por invitado ---------- */
+    const PREGUNTAS_ASISTE = [
+      { id: 'dietary_restrictions', titulo: 'Restricciones Alimentarias' },
+      { id: 'song_request', titulo: '¿Qué canción no puede faltar?' },
+      { id: 'message_to_couple', titulo: 'Mensaje para los novios' },
+    ];
+    const PREGUNTAS_NO_ASISTE = [
+      { id: 'message_to_couple', titulo: 'Mensaje para los novios' },
+    ];
+    function preguntasPara(asiste) {
+      if (asiste === true) return PREGUNTAS_ASISTE;
+      if (asiste === false) return PREGUNTAS_NO_ASISTE;
+      return [];
+    }
+
+    function renderPreguntas() {
+      const guest = state.guests.find(g => g.id === state.answeringId);
+      const asiste = state.answeringDraft.attending;
+      const preguntasActivas = preguntasPara(asiste);
+
+      let preguntasHTML = `
+    <div class="pregunta">
+      <p class="pregunta-num">1. Confirmar Asistencia<span class="req">*</span></p>
+      <div class="opciones-si-no">
+        <button class="opcion-si-no si ${asiste === true ? 'elegida' : ''}" data-asiste="si">Claro que sí!</button>
+        <button class="opcion-si-no no ${asiste === false ? 'elegida' : ''}" data-asiste="no">No, me lo pierdo</button>
+      </div>
+      ${asiste === undefined ? `<p class="req-nota">*Esta pregunta es obligatoria.</p>` : ''}
+    </div>
+  `;
+
+      for (let i = 0; i < state.answeringRevealed - 1 && i < preguntasActivas.length; i++) {
+        const p = preguntasActivas[i];
+        preguntasHTML += `
+      <div class="pregunta">
+        <p class="pregunta-num">${i + 2}. ${esc(p.titulo)}</p>
+        <textarea data-campo="${p.id}" placeholder="Escribe tu respuesta aquí.">${esc(state.answeringDraft[p.id] || '')}</textarea>
+      </div>
+    `;
+      }
+
+      const todoRevelado = asiste !== undefined && state.answeringRevealed > preguntasActivas.length;
+      const btnTexto = todoRevelado ? 'Guardar' : 'Siguiente';
+      const btnHabilitado = asiste !== undefined;
+
+      $card.innerHTML = `
+    ${encabezadoHTML()}
+    <p class="respondiendo-por">Respondiendo por ${esc(guest.display_name)}.</p>
+    <hr class="linea">
+    ${preguntasHTML}
+    <button class="btn-primario" id="btn-siguiente" ${btnHabilitado ? '' : 'disabled'}>${btnTexto}</button>
+    <button class="btn-texto" id="btn-cancelar">Cancelar</button>
+  `;
+
+      document.querySelectorAll('[data-asiste]').forEach(b => b.onclick = () => {
+        // guarda lo escrito hasta ahora antes de re-renderizar
+        guardarBorradorVisible();
+        state.answeringDraft.attending = (b.dataset.asiste === 'si');
+        state.answeringRevealed = 1;
+        renderPreguntas();
+      });
+      document.querySelectorAll('[data-campo]').forEach(t => t.addEventListener('input', e => {
+        state.answeringDraft[e.target.dataset.campo] = e.target.value;
+      }));
+      document.getElementById('btn-cancelar').onclick = () => { state.step = 'lista'; render(); };
+      document.getElementById('btn-siguiente').onclick = onAvanzarPregunta;
+    }
+
+    function guardarBorradorVisible() {
+      document.querySelectorAll('[data-campo]').forEach(t => {
+        state.answeringDraft[t.dataset.campo] = t.value;
+      });
+    }
+
+    async function onAvanzarPregunta() {
+      guardarBorradorVisible();
+      const asiste = state.answeringDraft.attending;
+      const preguntasActivas = preguntasPara(asiste);
+      const terminado = state.answeringRevealed > preguntasActivas.length;
+
+      if (!terminado) {
+        state.answeringRevealed++;
+        renderPreguntas();
+        return;
+      }
+
+      const $btn = document.getElementById('btn-siguiente');
+      $btn.disabled = true; $btn.textContent = 'Guardando…';
+      try {
+        const payload = {
+          attending: asiste,
+          dietary_restrictions: asiste === true ? (state.answeringDraft.dietary_restrictions || null) : null,
+          song_request: asiste === true ? (state.answeringDraft.song_request || null) : null,
+          message_to_couple: state.answeringDraft.message_to_couple || null,
+          responded_at: new Date().toISOString(),
+        };
+        const { error } = await sb.from('rsvp_guests').update(payload).eq('id', state.answeringId);
+        if (error) throw error;
+        const guest = state.guests.find(g => g.id === state.answeringId);
+        Object.assign(guest, payload);
+        const pendiente = primerSinResponder();
+        if (pendiente) { irAPreguntasDe(pendiente.id); return; }
+        state.step = 'lista';
+        render();
+      } catch (err) {
+        console.error(err);
+        $btn.disabled = false; $btn.textContent = terminado ? 'Guardar' : 'Siguiente';
+      }
+    }
+
+    /* ---------- paso 5: gracias ---------- */
+    function renderGracias() {
+      const filas = state.guests.map(g => `
+    <div class="resumen-fila">
+      <span>${esc(g.display_name)}</span>
+      ${g.attending === true ? `<span class="chip-estado si">Asiste</span>` :
+          g.attending === false ? `<span class="chip-estado no">No asiste</span>` :
+            `<span class="chip-estado no" style="background:var(--surface-2);color:var(--muted)">Sin responder</span>`
+        }
+    </div>
+  `).join('');
+
+      $card.innerHTML = `
+    ${encabezadoHTML()}
+    <div class="icono-check">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5 9.5 18 20 6" stroke="#1a8f52" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <h2 class="paso-titulo">¡Gracias por confirmar!</h2>
+    <p class="paso-ayuda">Guardamos las respuestas de tu grupo.</p>
+    <div class="resumen-grupo">${filas}</div>
+    <button class="btn-texto" id="btn-editar" style="margin-top:2px">Volver a editar respuestas</button>
+  `;
+      document.getElementById('btn-editar').onclick = () => { state.step = 'lista'; render(); };
+    }
+
+    render();
+  </script>
+</body>
+
+</html>
