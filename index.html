@@ -7,6 +7,11 @@
   <title>RSVP Marina & Esteban</title>
   <script>
     (function () {
+      // embebido dentro de la invitación: sin fondo, sin botón de tema, sin "volver"
+      if (window.self !== window.top) {
+        document.documentElement.classList.add('embebido');
+        return;
+      }
       try {
         if (localStorage.getItem('tema') === 'dark') {
           document.documentElement.setAttribute('data-theme', 'dark');
@@ -146,6 +151,13 @@
       z-index: -1;
       /* <- para mas o menos oscuro, subi o bajá el 0.45 de arriba (0 = sin oscurecer, 1 = negro total) */
     }
+
+    /* ───────── modo embebido (dentro de la invitación) ───────── */
+    .embebido body { background: transparent; }
+    .embebido body::before,
+    .embebido .btn-tema,
+    .embebido .volver-sitio { display: none; }
+    .embebido .pantalla { min-height: 0; padding: 4px 4px 12px; }
 
     ::selection {
       background: var(--accent-soft)
@@ -696,7 +708,7 @@
       novios: "Marina & Esteban",
       lugar: "Bodega Spinoglio",
       fecha: "Sábado, 21 de Noviembre de 2026",
-      linkSitio: "#", // ✏️ poné acá el link a la página principal de la invitación
+      linkSitio: "https://marinayesteban.netlify.app/", // ✏️ link a la página principal de la invitación
     };
     const SUPABASE_URL = "https://hlqrdwpqxgxabqrvhgxz.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhscXJkd3BxeGd4YWJxcnZoZ3h6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NTIxNDAsImV4cCI6MjA5MzMyODE0MH0.DkBXUZKYWFwUjMFHCpMg-ujJZCwsm16BzGE_hjxrRm0";
@@ -718,9 +730,19 @@
     (function () {
       let guardado = null;
       try { guardado = localStorage.getItem('tema'); } catch (e) { }
+      if (document.documentElement.classList.contains('embebido')) guardado = 'light';
       aplicarTema(guardado === 'dark' ? 'dark' : 'light');
       document.getElementById('btn-tema').onclick = toggleTema;
     })();
+
+    // embebido: cada vez que cambia el alto del formulario se lo avisamos a la invitación,
+    // así el iframe se agranda o achica y no aparece scroll adentro
+    if (document.documentElement.classList.contains('embebido')) {
+      const avisarAlto = () => window.parent.postMessage(
+        { tipo: 'rsvp-alto', alto: document.querySelector('.pantalla').offsetHeight }, '*');
+      new ResizeObserver(avisarAlto).observe(document.querySelector('.pantalla'));
+      window.addEventListener('load', avisarAlto);
+    }
 
     const state = {
       step: 'nombre',        // nombre | cantidad | lista | preguntas | gracias
@@ -740,7 +762,7 @@
 
     function encabezadoHTML() {
       return `
-    <a class="volver-sitio" href="https://giant-weta-bz0zb8.my.canva.site/mari-esteban">‹ Sitio del evento</a>
+    <a class="volver-sitio" href="${esc(EVENTO.linkSitio)}">‹ Sitio del evento</a>
     <div class="encabezado">
       <h1 class="novios">${esc(EVENTO.novios)}</h1>
       <p class="evento-lugar">${esc(EVENTO.lugar)}</p>
